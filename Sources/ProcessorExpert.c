@@ -133,8 +133,7 @@ int main(void)
 				}
 			}
 			
-			
-			Servo1_SetDutyUS((6.66666 * (90 - detectLine)) + 18400);
+				Servo1_SetDutyUS(((double) 6.6666 * (90 - detectLine)) + 18400);
 
 			maiorAmostra = 0;
 			menorAmostra = 65535;
