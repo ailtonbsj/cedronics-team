@@ -54,6 +54,8 @@
 #include "TU3.h"
 #include "SW1.h"
 #include "BitIoLdd7.h"
+#include "Serial1.h"
+#include "ASerialLdd1.h"
 /* Including shared modules, which are used for whole project */
 #include "PE_Types.h"
 #include "PE_Error.h"
@@ -77,6 +79,13 @@ short detFirstLine = 0;
 short detSeconLine = 0;
 short detectLine = 0;
 
+/* funcao Delay */
+void delay(int valor) {
+	int cont;
+	for (cont = 0; cont <= valor; cont++) {
+	}
+}
+
 /*lint -save  -e970 Disable MISRA rule (6.3) checking. */
 int main(void)
 /*lint -restore Enable MISRA rule (6.3) checking. */
@@ -92,6 +101,7 @@ int main(void)
 
 	/* Modulo de Acionamento de Componentes */
 	Analog1_Start();
+	Serial1_Disable(); //Usado em DEBUG
 
 	/* Modulo Tracao */
 	TracaoEnable_PutVal(1);
@@ -110,7 +120,7 @@ int main(void)
 
 			for (cont = 18; cont <= 109; cont++) {
 				if ((((double) 4 / (maiorAmostra - menorAmostra))
-						* (linhaBruta[cont] - menorAmostra)) <= 1) {
+						* (linhaBruta[cont] - menorAmostra)) <= 2) {
 					linha[cont - 18] = 0;
 				} else {
 					linha[cont - 18] = 1;
@@ -142,16 +152,12 @@ int main(void)
 		detectLine = ((detSeconLine - detFirstLine)/2) + detFirstLine;
 		Servo1_SetDutyUS((6.66666 * (90 - detectLine)) + 18400);
 		
-		if(detectLine == 90 || detectLine == 89 || detectLine == 1 || detectLine == 2){
-			TracaoA1PWM_SetDutyUS(19000);
-		}
-		
-		/* Modulo Controle e opções */
+		/* Modulo Controle e opções 
 		if (SW1_GetVal() == 1) {
 			TracaoA1PWM_SetDutyUS(16000); //12000
-		}
+		} */
 
-		/* Modulo Sinal via Serial
+		/* Modulo Sinal via Serial USADO EM DEBUG
 		 for (cont = 0; cont <= 91; cont++) {
 		 switch (linha[cont]) {
 		 case 0:
@@ -174,13 +180,13 @@ int main(void)
 		 break;
 
 		 }
-		 delay(3000);
+		 delay(1400);
 		 }
 		 Serial1_SendChar('\n');
-		 delay(3000);
+		 delay(1400);
 		 Serial1_SendChar('\r');
-		 delay(3000);
-		 FIM Modulo Sinal via Serial */
+		 delay(1400);
+		  FIM Modulo Sinal via Serial */
 
 	}
 

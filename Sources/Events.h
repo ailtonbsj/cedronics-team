@@ -59,6 +59,8 @@
 #include "TU3.h"
 #include "SW1.h"
 #include "BitIoLdd7.h"
+#include "Serial1.h"
+#include "ASerialLdd1.h"
 
 #ifdef __cplusplus
 extern "C" {
