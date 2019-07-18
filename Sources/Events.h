@@ -5,7 +5,7 @@
 **     Component   : Events
 **     Version     : Driver 01.00
 **     Compiler    : GNU C Compiler
-**     Date/Time   : 2013-09-18, 19:23, # CodeGen: 0
+**     Date/Time   : 2013-09-12, 20:37, # CodeGen: 0
 **     Abstract    :
 **         This is user's event module.
 **         Put your event handler code here.
@@ -38,29 +38,29 @@
 #include "BitIoLdd1.h"
 #include "CameraSI1.h"
 #include "BitIoLdd2.h"
-#include "CameraTimer1.h"
-#include "TimerIntLdd1.h"
-#include "TU1.h"
 #include "Analog1.h"
 #include "AdcLdd1.h"
-#include "TracaoA1PWM.h"
-#include "PwmLdd1.h"
-#include "TU2.h"
-#include "TracaoA2.h"
-#include "BitIoLdd3.h"
-#include "TracaoB1.h"
-#include "BitIoLdd4.h"
-#include "TracaoB2.h"
-#include "BitIoLdd5.h"
-#include "TracaoEnable.h"
-#include "BitIoLdd6.h"
-#include "Servo1.h"
-#include "PwmLdd2.h"
-#include "TU3.h"
-#include "SW1.h"
-#include "BitIoLdd7.h"
 #include "Serial1.h"
 #include "ASerialLdd1.h"
+#include "CameraTimer.h"
+#include "TimerIntLdd1.h"
+#include "TU1.h"
+#include "Servo1.h"
+#include "PwmLdd1.h"
+#include "TU2.h"
+#include "Tracao1.h"
+#include "BitIoLdd3.h"
+#include "Tracao2.h"
+#include "BitIoLdd4.h"
+#include "TracaoPWM1.h"
+#include "PwmLdd2.h"
+#include "TU3.h"
+#include "TracaoEnable.h"
+#include "BitIoLdd5.h"
+#include "SW1.h"
+#include "BitIoLdd6.h"
+#include "Tracao3.h"
+#include "BitIoLdd7.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -81,6 +81,22 @@ extern "C" {
 */
 void Cpu_OnNMIINT(void);
 
+
+/*
+** ===================================================================
+**     Event       :  CameraTimer_OnInterrupt (module Events)
+**
+**     Component   :  CameraTimer [TimerInt]
+**     Description :
+**         When a timer interrupt occurs this event is called (only
+**         when the component is enabled - <Enable> and the events are
+**         enabled - <EnableEvent>). This event is enabled only if a
+**         <interrupt service/event> is enabled.
+**     Parameters  : None
+**     Returns     : Nothing
+** ===================================================================
+*/
+void CameraTimer_OnInterrupt(void);
 
 void Analog1_OnEnd(void);
 /*
@@ -113,22 +129,6 @@ void Analog1_OnCalibrationEnd(void);
 **     Returns     : Nothing
 ** ===================================================================
 */
-
-/*
-** ===================================================================
-**     Event       :  CameraTimer1_OnInterrupt (module Events)
-**
-**     Component   :  CameraTimer1 [TimerInt]
-**     Description :
-**         When a timer interrupt occurs this event is called (only
-**         when the component is enabled - <Enable> and the events are
-**         enabled - <EnableEvent>). This event is enabled only if a
-**         <interrupt service/event> is enabled.
-**     Parameters  : None
-**     Returns     : Nothing
-** ===================================================================
-*/
-void CameraTimer1_OnInterrupt(void);
 
 /* END Events */
 
