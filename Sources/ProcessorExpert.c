@@ -89,8 +89,14 @@ short detSeconLine = 0;
 short detectLine = 0;
 
 /* Modulo Controle */
-short velocCurve = 0;
-short curve = 0;
+/*short velocCurve = 0;
+ short curve = 0;*/
+int TracaoCurveMenor = 12000;
+int TracaoCurveMaior = 12000;
+int TracaoReta = 12000;
+short divisao = 4;
+short limiador = 2;
+
 
 /* funcao Delay */
 void delay(int valor) {
@@ -117,8 +123,8 @@ int main(void)
 
 	/* Modulo Tracao */
 	TracaoEnable_PutVal(1);
-	TracaoA1PWM_SetDutyUS(14000);
-	TracaoB1PWM_SetDutyUS(14000);
+	TracaoA1PWM_SetDutyUS(TracaoReta);
+	TracaoB1PWM_SetDutyUS(TracaoReta);
 	TracaoA2_PutVal(0);
 	TracaoB2_PutVal(0);
 	while (TRUE) {
@@ -128,8 +134,8 @@ int main(void)
 		if (cameraFinished == 1) {
 			cameraFinished = 0;
 			for (cont = 18; cont <= 109; cont++) {
-				if ((((double) 4 / (maiorAmostra - menorAmostra))
-						* (linhaBruta[cont] - menorAmostra)) <= 1) {
+				if ((((double) divisao / (maiorAmostra - menorAmostra))
+						* (linhaBruta[cont] - menorAmostra)) <= limiador) {
 					linha[cont - 18] = 0;
 				} else {
 					linha[cont - 18] = 1;
@@ -146,29 +152,24 @@ int main(void)
 				}
 			}
 			/* Modulo Controle */
-			if (detectLine < 16) {
-				//CURVE
-				Servo1_SetDutyUS(DIREITO);
-				TracaoA1PWM_SetDutyUS(14000);
-				TracaoB1PWM_SetDutyUS(18000);
-			} else if (detectLine <= 30) {
-				//REACT
-				Servo1_SetDutyUS(CENTRO+6);
-			} else if (detectLine > 75) {
-				//CURVE
-				Servo1_SetDutyUS(ESQUERDO);
-
-				TracaoA1PWM_SetDutyUS(18000);
-				TracaoB1PWM_SetDutyUS(14000);
-			} else if (detectLine > 61) {
-				//REACT
-				Servo1_SetDutyUS(CENTRO-6);
+			if (detectLine < 10) {
+				Servo1_SetDutyUS(19000);
+				TracaoA1PWM_SetDutyUS(TracaoCurveMaior);
+				TracaoB1PWM_SetDutyUS(TracaoCurveMenor);
+				LED1_PutVal(1);
+			} else if (detectLine > 81) {
+				Servo1_SetDutyUS(18400);
+				TracaoA1PWM_SetDutyUS(TracaoCurveMenor);
+				TracaoB1PWM_SetDutyUS(TracaoCurveMaior);
+				LED1_PutVal(1);
 			} else {
-				//STRAIGHT
-				TracaoA1PWM_SetDutyUS(10000);
-				TracaoB1PWM_SetDutyUS(10000);
+				LED1_PutVal(0);
+				LED2_PutVal(0);
+				Servo1_SetDutyUS(
+						((double) 6.6666 * (90 - (detectLine))) + 18400);
+				TracaoA1PWM_SetDutyUS(TracaoReta);
+				TracaoB1PWM_SetDutyUS(TracaoReta);
 			}
-			//Servo1_SetDutyUS( ((double) 6.6666 * (90 - (detectLine))) + 18400);
 
 			maiorAmostra = 0;
 			menorAmostra = 65535;
@@ -176,6 +177,15 @@ int main(void)
 			Analog1_Start();
 			CameraTimer1_Enable();
 		}
+		/* Modulo Alteracao de Controle */
+		if(SW1_GetVal() == 1){
+			TracaoReta = 11500;
+			TracaoCurveMaior = 5500;
+			TracaoCurveMenor = 19000;
+			divisao = 5;
+			limiador = 2;
+		}
+		
 
 	}
 
