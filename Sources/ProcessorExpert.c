@@ -63,6 +63,7 @@
 #include "IO_Map.h"
 
 /* User includes (#include below this line is not maintained by Processor Expert) */
+#include <stdlib.h>
 
 /* Modulo Camera */
 byte cameraClock = 0;
@@ -78,6 +79,11 @@ unsigned long tempoDuty = 18700;
 short detFirstLine = 0;
 short detSeconLine = 0;
 short detectLine = 0;
+
+/* Modulo Controle */
+short contTemp = 0;
+short velocCurve = 0;
+short curve = 0;
 
 /* funcao Delay */
 void delay(int valor) {
@@ -104,8 +110,8 @@ int main(void)
 
 	/* Modulo Tracao */
 	TracaoEnable_PutVal(1);
-	TracaoA1PWM_SetDutyUS(11000);
-	TracaoB1PWM_SetDutyUS(11000);
+	TracaoA1PWM_SetDutyUS(12000);
+	TracaoB1PWM_SetDutyUS(12000);
 	TracaoA2_PutVal(0);
 	TracaoB2_PutVal(0);
 	while (TRUE) {
@@ -126,26 +132,44 @@ int main(void)
 			/* Modulo servo Motor */
 			/* Tempo usando atualmente 18400--18700--19000 */
 			for (cont = 0; cont <= 89; cont++) {
-				if ((linha[cont] == 0) && (linha[cont + 1] == 0) && (linha[cont + 2] == 0)) {
+				if ((linha[cont] == 0) && (linha[cont + 1] == 0)
+						&& (linha[cont + 2] == 0)) {
 					detectLine = cont;
 					break;
 				}
 			}
+			curve = abs(velocCurve - detectLine);
 			
-			if(detectLine>=76){
-				TracaoA1PWM_SetDutyUS(19900);
-				Servo1_SetDutyUS(18400);
-			}
-			if(detectLine<=15){
-				TracaoB1PWM_SetDutyUS(19900);
-				Servo1_SetDutyUS(19000);
-			}
-			else{
-				TracaoA1PWM_SetDutyUS(11000);
-				TracaoB1PWM_SetDutyUS(11000);
-				Servo1_SetDutyUS(((double) 6.6666 * (90 - (detectLine))) + 18400);
-			}
-			
+			TracaoA1PWM_SetDutyUS((curve*1600)+11700);
+			TracaoB1PWM_SetDutyUS((curve*1600)+11700);
+			/*if (curve < 2) {
+			 TracaoA1PWM_SetDutyUS(18000);
+			 TracaoB1PWM_SetDutyUS(18000);
+			 } else {
+			 TracaoA1PWM_SetDutyUS(14000);
+			 TracaoB1PWM_SetDutyUS(14000);
+			 }*/
+
+			/*if (detectLine >= 76) {
+			 TracaoA1PWM_SetDutyUS(19900);
+			 Servo1_SetDutyUS(18400);
+			 }
+			 if (detectLine <= 15) {
+			 TracaoB1PWM_SetDutyUS(19900);
+			 Servo1_SetDutyUS(19000);
+			 } else {
+			 TracaoA1PWM_SetDutyUS(15000);
+			 TracaoB1PWM_SetDutyUS(15000);
+			 Servo1_SetDutyUS(
+			 ((double) 6.6666 * (90 - (detectLine))) + 18400);
+			 }*/
+			Servo1_SetDutyUS( ((double) 6.6666 * (90 - (detectLine))) + 18400);
+			if (contTemp < 6)
+				cont++;
+			else
+				contTemp = 0;
+			if (contTemp == 0)
+				velocCurve = detectLine;
 
 			maiorAmostra = 0;
 			menorAmostra = 65535;
