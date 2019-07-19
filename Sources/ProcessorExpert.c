@@ -178,9 +178,9 @@ int main(void)
 			CameraTimer1_Enable();
 		}
 		/* Modulo Alteracao de Controle */
-		if(SW1_GetVal() == 1){
-			TracaoReta = 11500;
-			TracaoCurveMaior = 5500;
+		if(SW1_GetVal() == 1){  //NOITE
+			TracaoReta = 11000;
+			TracaoCurveMaior = 2500;
 			TracaoCurveMenor = 19000;
 			divisao = 5;
 			limiador = 2;
