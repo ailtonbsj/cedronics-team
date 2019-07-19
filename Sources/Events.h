@@ -46,10 +46,6 @@
 #include "TracaoA1PWM.h"
 #include "PwmLdd1.h"
 #include "TU2.h"
-#include "TracaoA2.h"
-#include "BitIoLdd3.h"
-#include "TracaoB1.h"
-#include "BitIoLdd4.h"
 #include "TracaoB2.h"
 #include "BitIoLdd5.h"
 #include "TracaoEnable.h"
@@ -59,6 +55,12 @@
 #include "TU3.h"
 #include "SW1.h"
 #include "BitIoLdd7.h"
+#include "LED1.h"
+#include "BitIoLdd8.h"
+#include "TracaoA2.h"
+#include "BitIoLdd3.h"
+#include "TracaoB1PWM.h"
+#include "PwmLdd3.h"
 
 #ifdef __cplusplus
 extern "C" {

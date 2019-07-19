@@ -41,10 +41,6 @@
 #include "TracaoA1PWM.h"
 #include "PwmLdd1.h"
 #include "TU2.h"
-#include "TracaoA2.h"
-#include "BitIoLdd3.h"
-#include "TracaoB1.h"
-#include "BitIoLdd4.h"
 #include "TracaoB2.h"
 #include "BitIoLdd5.h"
 #include "TracaoEnable.h"
@@ -54,6 +50,12 @@
 #include "TU3.h"
 #include "SW1.h"
 #include "BitIoLdd7.h"
+#include "LED1.h"
+#include "BitIoLdd8.h"
+#include "TracaoA2.h"
+#include "BitIoLdd3.h"
+#include "TracaoB1PWM.h"
+#include "PwmLdd3.h"
 /* Including shared modules, which are used for whole project */
 #include "PE_Types.h"
 #include "PE_Error.h"
@@ -102,21 +104,19 @@ int main(void)
 
 	/* Modulo Tracao */
 	TracaoEnable_PutVal(1);
+	TracaoA1PWM_SetDutyUS(11000);
+	TracaoB1PWM_SetDutyUS(11000);
 	TracaoA2_PutVal(0);
-	TracaoB1_PutVal(0);
 	TracaoB2_PutVal(0);
-	TracaoA1PWM_SetDutyUS(13000);
-
 	while (TRUE) {
 		int cont;
 
 		/* Modulo Camera */
 		if (cameraFinished == 1) {
 			cameraFinished = 0;
-
 			for (cont = 18; cont <= 109; cont++) {
 				if ((((double) 4 / (maiorAmostra - menorAmostra))
-						* (linhaBruta[cont] - menorAmostra)) <= 2) {
+						* (linhaBruta[cont] - menorAmostra)) <= 1) {
 					linha[cont - 18] = 0;
 				} else {
 					linha[cont - 18] = 1;
@@ -126,14 +126,26 @@ int main(void)
 			/* Modulo servo Motor */
 			/* Tempo usando atualmente 18400--18700--19000 */
 			for (cont = 0; cont <= 89; cont++) {
-				if ((linha[cont] == 0) && (linha[cont + 1] == 0)
-						&& (linha[cont + 2] == 0)) {
-					detectLine = cont + 1;
+				if ((linha[cont] == 0) && (linha[cont + 1] == 0) && (linha[cont + 2] == 0)) {
+					detectLine = cont;
 					break;
 				}
 			}
 			
-				Servo1_SetDutyUS(((double) 6.6666 * (90 - detectLine)) + 18400);
+			if(detectLine>=76){
+				TracaoA1PWM_SetDutyUS(19900);
+				Servo1_SetDutyUS(18400);
+			}
+			if(detectLine<=15){
+				TracaoB1PWM_SetDutyUS(19900);
+				Servo1_SetDutyUS(19000);
+			}
+			else{
+				TracaoA1PWM_SetDutyUS(11000);
+				TracaoB1PWM_SetDutyUS(11000);
+				Servo1_SetDutyUS(((double) 6.6666 * (90 - (detectLine))) + 18400);
+			}
+			
 
 			maiorAmostra = 0;
 			menorAmostra = 65535;
