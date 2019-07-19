@@ -50,6 +50,12 @@
 #include "TU3.h"
 #include "SW1.h"
 #include "BitIoLdd7.h"
+#include "SW2.h"
+#include "BitIoLdd9.h"
+#include "SW3.h"
+#include "BitIoLdd10.h"
+#include "SW4.h"
+#include "BitIoLdd11.h"
 #include "LED1.h"
 #include "BitIoLdd8.h"
 #include "DetectCurve1.h"
@@ -84,13 +90,11 @@ unsigned long menorAmostra = 65535;
 
 /* Modulo Servo */
 unsigned long tempoDuty = 18700;
-short detFirstLine = 0;
-short detSeconLine = 0;
 short detectLine = 0;
+/*short detFirstLine = 0;
+ short detSeconLine = 0;*/
 
 /* Modulo Controle */
-/*short velocCurve = 0;
- short curve = 0;*/
 int TracaoCurveMenor = 12000;
 int TracaoCurveMaior = 12000;
 int TracaoReta = 12000;
@@ -121,37 +125,26 @@ int main(void)
 	TracaoA2_PutVal(0);
 	TracaoB2_PutVal(0);
 	while (TRUE) {
-		int cont;
+		/*int cont;*/
 		int contIni = 0;
 		int contFin = 91;
 
 		/* Modulo Camera */
 		if (cameraFinished == 1) {
 			cameraFinished = 0;
+
 			cortador = ((maiorAmostra - menorAmostra) / divisao) * limiador
 					+ menorAmostra;
-			for (cont = 18; cont <= 109; cont++) {
-				/*if ((((double) divisao / (maiorAmostra - menorAmostra)) * (linhaBruta[cont] - menorAmostra)) <= limiador) {
-				 linha[cont - 18] = 0;
-				 } else {
-				 linha[cont - 18] = 1;
-				 }*/
-				if (linhaBruta[cont] <= cortador) {
-					linha[cont - 18] = 0;
+			for (contIni = 18; contIni <= 109; contIni++) {
+				if (linhaBruta[contIni] <= cortador) {
+					linha[contIni - 18] = 0;
 				} else {
-					linha[cont - 18] = 1;
+					linha[contIni - 18] = 1;
 				}
 			}
 
 			/* Modulo servo Motor */
 			/* Tempo usando atualmente 18400--18700--19000 */
-			/*for (cont = 0; cont <= 89; cont++) {
-			 if ((linha[cont] == 0) && (linha[cont + 1] == 0)
-			 && (linha[cont + 2] == 0)) {
-			 detectLine = cont;
-			 break;
-			 }
-			 }*/
 			for (contIni = 0, contFin = 91; contIni <= 45;
 					contIni++, contFin--) {
 				if ((linha[contIni] == 0) && (linha[contIni + 1] == 0)
@@ -164,7 +157,7 @@ int main(void)
 					detectLine = contFin - 1;
 					break;
 				}
-				if(contIni == 45){
+				if (contIni == 45) {
 					LED1_PutVal(1);
 					DetectCurve1_Enable();
 				}
@@ -197,9 +190,40 @@ int main(void)
 			CameraTimer1_Enable();
 		}
 		/* Modulo Alteracao de Controle */
-		if (SW1_GetVal() == 1) { //NOITE
-			TracaoReta = 11000;
-			TracaoCurveMaior = 4000;
+		if (SW1_GetVal() == 1) {
+			/* Velocidade de Maxima Max */
+			TracaoReta = 8500;
+			TracaoCurveMaior = 10;
+			TracaoCurveMenor = 17000;
+			divisao = 100;
+			limiador = 40;
+			/*
+			TracaoReta = 9000;
+			TracaoCurveMaior = 10;
+			TracaoCurveMenor = 18000;
+			divisao = 100;
+			limiador = 40;*/
+
+		} else if (SW1_GetVal() == 1) {
+			/* Velocidade de Maxima BOM */
+			TracaoReta = 10000;
+			TracaoCurveMaior = 500;
+			TracaoCurveMenor = 19900;
+			divisao = 100;
+			limiador = 40;
+
+		} else if (SW3_GetVal() == 1) {
+			/* Velocidade de Seguranca 2 */
+			TracaoReta = 12000;
+			TracaoCurveMaior = 500;
+			TracaoCurveMenor = 19900;
+			divisao = 100;
+			limiador = 40;
+
+		} else if (SW4_GetVal() == 1) {
+			/* Velocidade de segurança */
+			TracaoReta = 10000;
+			TracaoCurveMaior = 7000;
 			TracaoCurveMenor = 19000;
 			divisao = 100;
 			limiador = 40;
