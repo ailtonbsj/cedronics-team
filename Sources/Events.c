@@ -173,30 +173,8 @@ void CameraTimer1_OnInterrupt(void) {
  */
 void DetectCurve1_OnInterrupt(void) {
 	/* Write your code here ... */
-	curve = abs(velocCurve - detectLine);
-	if ((velocCurve - detectLine) < 0) {
-		ladoCurve = 0;
-	} else {
-		ladoCurve = 1;
-	}
-	if (curve > 25) {
-		LED1_PutVal(1);
-		if (ladoCurve == 0) {
-			TracaoA1PWM_SetDutyUS(16500);
-			TracaoB1PWM_SetDutyUS(8500);
-
-		} else {
-
-			TracaoA1PWM_SetDutyUS(8500);
-			TracaoB1PWM_SetDutyUS(16500);
-		}
-	} else {
-		LED1_PutVal(0);
-		TracaoA1PWM_SetDutyUS(11000);
-		TracaoB1PWM_SetDutyUS(11000);
-
-	}
-	//LED1_NegVal();
+	LED1_NegVal();
+	//LED2_SetVal();
 }
 
 /* END Events */

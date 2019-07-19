@@ -69,6 +69,9 @@
 
 /* User includes (#include below this line is not maintained by Processor Expert) */
 
+#define CENTRO 18700
+#define ESQUERDO 18400
+#define DIREITO 19000
 
 /* Modulo Camera */
 byte cameraClock = 0;
@@ -142,31 +145,30 @@ int main(void)
 					break;
 				}
 			}
-			//TracaoA1PWM_SetDutyUS((curve*1600)+16000);
-			//TracaoB1PWM_SetDutyUS((curve*1600)+16000);
-			/*if (curve < 2) {
-			 TracaoA1PWM_SetDutyUS(18000);
-			 TracaoB1PWM_SetDutyUS(18000);
-			 } else {
-			 TracaoA1PWM_SetDutyUS(14000);
-			 TracaoB1PWM_SetDutyUS(14000);
-			 }*/
+			/* Modulo Controle */
+			if (detectLine < 16) {
+				//CURVE
+				Servo1_SetDutyUS(DIREITO);
+				TracaoA1PWM_SetDutyUS(14000);
+				TracaoB1PWM_SetDutyUS(18000);
+			} else if (detectLine <= 30) {
+				//REACT
+				Servo1_SetDutyUS(CENTRO+6);
+			} else if (detectLine > 75) {
+				//CURVE
+				Servo1_SetDutyUS(ESQUERDO);
 
-			/*if (detectLine >= 76) {
-			 TracaoA1PWM_SetDutyUS(19900);
-			 Servo1_SetDutyUS(18400);
-			 }
-			 if (detectLine <= 15) {
-			 TracaoB1PWM_SetDutyUS(19900);
-			 Servo1_SetDutyUS(19000);
-			 } else {
-			 TracaoA1PWM_SetDutyUS(15000);
-			 TracaoB1PWM_SetDutyUS(15000);
-			 Servo1_SetDutyUS(
-			 ((double) 6.6666 * (90 - (detectLine))) + 18400);
-			 }*/
-			Servo1_SetDutyUS( ((double) 6.6666 * (90 - (detectLine))) + 18400);
-				
+				TracaoA1PWM_SetDutyUS(18000);
+				TracaoB1PWM_SetDutyUS(14000);
+			} else if (detectLine > 61) {
+				//REACT
+				Servo1_SetDutyUS(CENTRO-6);
+			} else {
+				//STRAIGHT
+				TracaoA1PWM_SetDutyUS(10000);
+				TracaoB1PWM_SetDutyUS(10000);
+			}
+			//Servo1_SetDutyUS( ((double) 6.6666 * (90 - (detectLine))) + 18400);
 
 			maiorAmostra = 0;
 			menorAmostra = 65535;
@@ -174,11 +176,6 @@ int main(void)
 			Analog1_Start();
 			CameraTimer1_Enable();
 		}
-
-		/* Modulo Controle e opções 
-		 if (SW1_GetVal() == 1) {
-		 TracaoA1PWM_SetDutyUS(16000); //12000
-		 } */
 
 	}
 
