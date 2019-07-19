@@ -57,6 +57,11 @@
 #include "BitIoLdd7.h"
 #include "LED1.h"
 #include "BitIoLdd8.h"
+#include "DetectCurve1.h"
+#include "TimerIntLdd2.h"
+#include "TU4.h"
+#include "LED2.h"
+#include "BitIoLdd4.h"
 #include "TracaoA2.h"
 #include "BitIoLdd3.h"
 #include "TracaoB1PWM.h"
@@ -129,6 +134,22 @@ void Analog1_OnCalibrationEnd(void);
 ** ===================================================================
 */
 void CameraTimer1_OnInterrupt(void);
+
+/*
+** ===================================================================
+**     Event       :  DetectCurve1_OnInterrupt (module Events)
+**
+**     Component   :  DetectCurve1 [TimerInt]
+**     Description :
+**         When a timer interrupt occurs this event is called (only
+**         when the component is enabled - <Enable> and the events are
+**         enabled - <EnableEvent>). This event is enabled only if a
+**         <interrupt service/event> is enabled.
+**     Parameters  : None
+**     Returns     : Nothing
+** ===================================================================
+*/
+void DetectCurve1_OnInterrupt(void);
 
 /* END Events */
 

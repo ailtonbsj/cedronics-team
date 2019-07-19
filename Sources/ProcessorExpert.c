@@ -52,6 +52,11 @@
 #include "BitIoLdd7.h"
 #include "LED1.h"
 #include "BitIoLdd8.h"
+#include "DetectCurve1.h"
+#include "TimerIntLdd2.h"
+#include "TU4.h"
+#include "LED2.h"
+#include "BitIoLdd4.h"
 #include "TracaoA2.h"
 #include "BitIoLdd3.h"
 #include "TracaoB1PWM.h"
@@ -63,7 +68,7 @@
 #include "IO_Map.h"
 
 /* User includes (#include below this line is not maintained by Processor Expert) */
-#include <stdlib.h>
+
 
 /* Modulo Camera */
 byte cameraClock = 0;
@@ -81,7 +86,6 @@ short detSeconLine = 0;
 short detectLine = 0;
 
 /* Modulo Controle */
-short contTemp = 0;
 short velocCurve = 0;
 short curve = 0;
 
@@ -110,8 +114,8 @@ int main(void)
 
 	/* Modulo Tracao */
 	TracaoEnable_PutVal(1);
-	TracaoA1PWM_SetDutyUS(12000);
-	TracaoB1PWM_SetDutyUS(12000);
+	TracaoA1PWM_SetDutyUS(14000);
+	TracaoB1PWM_SetDutyUS(14000);
 	TracaoA2_PutVal(0);
 	TracaoB2_PutVal(0);
 	while (TRUE) {
@@ -138,10 +142,8 @@ int main(void)
 					break;
 				}
 			}
-			curve = abs(velocCurve - detectLine);
-			
-			TracaoA1PWM_SetDutyUS((curve*1600)+11700);
-			TracaoB1PWM_SetDutyUS((curve*1600)+11700);
+			//TracaoA1PWM_SetDutyUS((curve*1600)+16000);
+			//TracaoB1PWM_SetDutyUS((curve*1600)+16000);
 			/*if (curve < 2) {
 			 TracaoA1PWM_SetDutyUS(18000);
 			 TracaoB1PWM_SetDutyUS(18000);
@@ -164,12 +166,7 @@ int main(void)
 			 ((double) 6.6666 * (90 - (detectLine))) + 18400);
 			 }*/
 			Servo1_SetDutyUS( ((double) 6.6666 * (90 - (detectLine))) + 18400);
-			if (contTemp < 6)
-				cont++;
-			else
-				contTemp = 0;
-			if (contTemp == 0)
-				velocCurve = detectLine;
+				
 
 			maiorAmostra = 0;
 			menorAmostra = 65535;
