@@ -173,7 +173,8 @@ void CameraTimer1_OnInterrupt(void) {
  */
 void DetectCurve1_OnInterrupt(void) {
 	/* Write your code here ... */
-	//LED2_SetVal();
+	LED1_PutVal(0);
+	DetectCurve1_Disable();
 }
 
 /* END Events */

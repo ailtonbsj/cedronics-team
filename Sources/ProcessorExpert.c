@@ -96,14 +96,7 @@ int TracaoCurveMaior = 12000;
 int TracaoReta = 12000;
 short divisao = 4;
 short limiador = 2;
-
-
-/* funcao Delay */
-void delay(int valor) {
-	int cont;
-	for (cont = 0; cont <= valor; cont++) {
-	}
-}
+long cortador = 0;
 
 /*lint -save  -e970 Disable MISRA rule (6.3) checking. */
 int main(void)
@@ -129,13 +122,21 @@ int main(void)
 	TracaoB2_PutVal(0);
 	while (TRUE) {
 		int cont;
+		int contIni = 0;
+		int contFin = 91;
 
 		/* Modulo Camera */
 		if (cameraFinished == 1) {
 			cameraFinished = 0;
+			cortador = ((maiorAmostra - menorAmostra) / divisao) * limiador
+					+ menorAmostra;
 			for (cont = 18; cont <= 109; cont++) {
-				if ((((double) divisao / (maiorAmostra - menorAmostra))
-						* (linhaBruta[cont] - menorAmostra)) <= limiador) {
+				/*if ((((double) divisao / (maiorAmostra - menorAmostra)) * (linhaBruta[cont] - menorAmostra)) <= limiador) {
+				 linha[cont - 18] = 0;
+				 } else {
+				 linha[cont - 18] = 1;
+				 }*/
+				if (linhaBruta[cont] <= cortador) {
 					linha[cont - 18] = 0;
 				} else {
 					linha[cont - 18] = 1;
@@ -144,27 +145,45 @@ int main(void)
 
 			/* Modulo servo Motor */
 			/* Tempo usando atualmente 18400--18700--19000 */
-			for (cont = 0; cont <= 89; cont++) {
-				if ((linha[cont] == 0) && (linha[cont + 1] == 0)
-						&& (linha[cont + 2] == 0)) {
-					detectLine = cont;
+			/*for (cont = 0; cont <= 89; cont++) {
+			 if ((linha[cont] == 0) && (linha[cont + 1] == 0)
+			 && (linha[cont + 2] == 0)) {
+			 detectLine = cont;
+			 break;
+			 }
+			 }*/
+			for (contIni = 0, contFin = 91; contIni <= 45;
+					contIni++, contFin--) {
+				if ((linha[contIni] == 0) && (linha[contIni + 1] == 0)
+						&& (linha[contIni + 2] == 0)) {
+					detectLine = contIni + 1;
 					break;
 				}
+				if ((linha[contFin] == 0) && (linha[contFin + 1] == 0)
+						&& (linha[contFin + 2] == 0)) {
+					detectLine = contFin - 1;
+					break;
+				}
+				if(contIni == 45){
+					LED1_PutVal(1);
+					DetectCurve1_Enable();
+				}
+
 			}
 			/* Modulo Controle */
 			if (detectLine < 10) {
 				Servo1_SetDutyUS(19000);
 				TracaoA1PWM_SetDutyUS(TracaoCurveMaior);
 				TracaoB1PWM_SetDutyUS(TracaoCurveMenor);
-				LED1_PutVal(1);
+				//LED1_PutVal(1);
 			} else if (detectLine > 81) {
 				Servo1_SetDutyUS(18400);
 				TracaoA1PWM_SetDutyUS(TracaoCurveMenor);
 				TracaoB1PWM_SetDutyUS(TracaoCurveMaior);
-				LED1_PutVal(1);
+				//LED2_PutVal(1);
 			} else {
-				LED1_PutVal(0);
-				LED2_PutVal(0);
+				//LED1_PutVal(0);
+				//LED2_PutVal(0);
 				Servo1_SetDutyUS(
 						((double) 6.6666 * (90 - (detectLine))) + 18400);
 				TracaoA1PWM_SetDutyUS(TracaoReta);
@@ -178,14 +197,13 @@ int main(void)
 			CameraTimer1_Enable();
 		}
 		/* Modulo Alteracao de Controle */
-		if(SW1_GetVal() == 1){  //NOITE
+		if (SW1_GetVal() == 1) { //NOITE
 			TracaoReta = 11000;
-			TracaoCurveMaior = 2500;
+			TracaoCurveMaior = 4000;
 			TracaoCurveMenor = 19000;
-			divisao = 5;
-			limiador = 2;
+			divisao = 100;
+			limiador = 40;
 		}
-		
 
 	}
 
