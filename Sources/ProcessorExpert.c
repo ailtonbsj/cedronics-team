@@ -58,11 +58,19 @@
 #include "BitIoLdd11.h"
 #include "LED1.h"
 #include "BitIoLdd8.h"
-#include "DetectCurve1.h"
-#include "TimerIntLdd2.h"
 #include "TU4.h"
 #include "LED2.h"
 #include "BitIoLdd4.h"
+#include "LED3.h"
+#include "BitIoLdd12.h"
+#include "LED4.h"
+#include "BitIoLdd13.h"
+#include "LRED.h"
+#include "BitIoLdd14.h"
+#include "LBLUE.h"
+#include "BitIoLdd15.h"
+#include "LGREEN.h"
+#include "BitIoLdd16.h"
 #include "TracaoA2.h"
 #include "BitIoLdd3.h"
 #include "TracaoB1PWM.h"
@@ -82,7 +90,7 @@
 /* Modulo Camera */
 byte cameraClock = 0;
 byte cameraCont = 0;
-byte cameraFinished = 0;
+byte cameraFinished = 0; //flag
 unsigned long linhaBruta[128];
 unsigned long linha[93];
 unsigned long maiorAmostra = 0;
@@ -91,12 +99,8 @@ unsigned long menorAmostra = 65535;
 /* Modulo Servo */
 unsigned long tempoDuty = 18700;
 short detectLine = 0;
-/*short detFirstLine = 0;
- short detSeconLine = 0;*/
-
 short numLine = 0; //Quatidade de linha encontradas
 short widLine = 0; //Tamanho da linha
-//short findLine = 0;// flag indica encontro de linha
 
 /* Modulo Controle */
 int TracaoCurveMenor = 12000;
@@ -105,6 +109,9 @@ int TracaoReta = 12000;
 short divisao = 4;
 short limiador = 2;
 long cortador = 0;
+//short shutdown = 0;
+//short finishLine = 0;
+//short contFinishLine = 0;
 
 /*lint -save  -e970 Disable MISRA rule (6.3) checking. */
 int main(void)
@@ -130,9 +137,9 @@ int main(void)
 	TracaoB2_PutVal(0);
 	linha[92] = 1;
 	while (TRUE) {
+		LBLUE_PutVal(1);
 		/*int cont;*/
 		int contIni = 0;
-		//int contFin = 91;
 
 		/* Modulo Camera */
 		if (cameraFinished == 1) {
@@ -149,31 +156,12 @@ int main(void)
 			}
 
 			/* Modulo servo Motor */
-			/* Tempo usando atualmente 18400--18700--19000 */
-			/*for (contIni = 0, contFin = 91; contIni <= 45;
-			 contIni++, contFin--) {
-			 if ((linha[contIni] == 0) && (linha[contIni + 1] == 0)
-			 && (linha[contIni + 2] == 0)) {
-			 detectLine = contIni + 1;
-			 break;
-			 }
-			 if ((linha[contFin] == 0) && (linha[contFin + 1] == 0)
-			 && (linha[contFin + 2] == 0)) {
-			 detectLine = contFin - 1;
-			 break;
-			 }
-			 if (contIni == 45) {
-			 LED1_PutVal(1);
-			 DetectCurve1_Enable();
-			 }
-
-			 }*/
 			for (contIni = 0; contIni <= 92; contIni++) {
 				if (linha[contIni] == 0) {
 					//findLine = 1;
 					widLine++;
 				} else {
-					if (widLine >= 5 && widLine <= 8) {
+					if (widLine >= 5 && widLine <= 8) { //if (widLine >= 5 && widLine <= 8) {
 						numLine++;
 						if (widLine > 5)
 							detectLine = contIni - 4;
@@ -184,24 +172,45 @@ int main(void)
 					widLine = 0;
 				}
 			}
-			/* Modulo Controle */
 
+			/* Modulo Controle */
+			/*if (numLine == 3 && finishLine == 1) {
+			 if (contFinishLine == 1)
+			 TracaoEnable_PutVal(0);
+			 else
+			 contFinishLine++;
+			 }*/
 			if (numLine == 1) {
-				if (detectLine < 10) {
+
+				//SERVO
+				if (detectLine < 6) { //10
 					Servo1_SetDutyUS(19000);
-					TracaoA1PWM_SetDutyUS(TracaoCurveMaior);
-					TracaoB1PWM_SetDutyUS(TracaoCurveMenor);
-					//LED1_PutVal(1);
-				} else if (detectLine > 81) {
+				} else if (detectLine > 85) { //81
 					Servo1_SetDutyUS(18400);
-					TracaoA1PWM_SetDutyUS(TracaoCurveMenor);
-					TracaoB1PWM_SetDutyUS(TracaoCurveMaior);
-					//LED2_PutVal(1);
 				} else {
-					//LED1_PutVal(0);
-					//LED2_PutVal(0);
 					Servo1_SetDutyUS(
 							((double) 6.6666 * (90 - (detectLine))) + 18400);
+				}
+
+				//TRACAO
+				/*if (shutdown == 1) {
+				 TracaoA1PWM_SetDutyUS(990);
+				 TracaoB1PWM_SetDutyUS(990);
+				 } else*/if (detectLine < 29) { //30
+					TracaoA1PWM_SetDutyUS(TracaoCurveMaior);
+					TracaoB1PWM_SetDutyUS(TracaoCurveMenor);
+					LED1_PutVal(1);
+					LED2_PutVal(1);
+					LED3_PutVal(1);
+					LED4_PutVal(1);
+				} else if (detectLine > 62) { //61
+					TracaoA1PWM_SetDutyUS(TracaoCurveMenor);
+					TracaoB1PWM_SetDutyUS(TracaoCurveMaior);
+					LED1_PutVal(1);
+					LED2_PutVal(1);
+					LED3_PutVal(1);
+					LED4_PutVal(1);
+				} else {
 					TracaoA1PWM_SetDutyUS(TracaoReta);
 					TracaoB1PWM_SetDutyUS(TracaoReta);
 				}
@@ -216,30 +225,39 @@ int main(void)
 		}
 		/* Modulo Alteracao de Controle */
 		if (SW1_GetVal() == 1) {
-			/* Velocidade +10% */
+			/* Maximmum Speed */
 			TracaoReta = 600;
-			TracaoCurveMaior = 150;
+			TracaoCurveMaior = 2;
 			TracaoCurveMenor = 950;
 			divisao = 100;
 			limiador = 40;
+			//finishLine = 0;
 
 		} else if (SW2_GetVal() == 1) {
-			/* Velocidade +5% */
-			TracaoReta = 620;
-			TracaoCurveMaior = 150;
-			TracaoCurveMenor = 950;
+			TracaoReta = 500;
+			TracaoCurveMaior = 90;
+			TracaoCurveMenor = 800;
 			divisao = 100;
 			limiador = 40;
+			//finishLine = 0;
 
 		} else if (SW3_GetVal() == 1) {
+			/* MAX */
+			TracaoReta = 400;
+			TracaoCurveMaior = 90;
+			TracaoCurveMenor = 700;
+			divisao = 100;
+			limiador = 40;
+			//finishLine = 0;
 
 		} else if (SW4_GetVal() == 1) {
-			/* Velocidade de segurança */
-			TracaoReta = 650;
-			TracaoCurveMaior = 250;
+			/* Security Speed */
+			TracaoReta = 510;
+			TracaoCurveMaior = 2;
 			TracaoCurveMenor = 950;
 			divisao = 100;
 			limiador = 40;
+			//finishLine = 0;
 		}
 
 	}
