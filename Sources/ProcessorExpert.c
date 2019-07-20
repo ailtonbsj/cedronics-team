@@ -84,7 +84,7 @@ byte cameraClock = 0;
 byte cameraCont = 0;
 byte cameraFinished = 0;
 unsigned long linhaBruta[128];
-unsigned long linha[92];
+unsigned long linha[93];
 unsigned long maiorAmostra = 0;
 unsigned long menorAmostra = 65535;
 
@@ -93,6 +93,10 @@ unsigned long tempoDuty = 18700;
 short detectLine = 0;
 /*short detFirstLine = 0;
  short detSeconLine = 0;*/
+
+short numLine = 0; //Quatidade de linha encontradas
+short widLine = 0; //Tamanho da linha
+//short findLine = 0;// flag indica encontro de linha
 
 /* Modulo Controle */
 int TracaoCurveMenor = 12000;
@@ -124,10 +128,11 @@ int main(void)
 	TracaoB1PWM_SetDutyUS(TracaoReta);
 	TracaoA2_PutVal(0);
 	TracaoB2_PutVal(0);
+	linha[92] = 1;
 	while (TRUE) {
 		/*int cont;*/
 		int contIni = 0;
-		int contFin = 91;
+		//int contFin = 91;
 
 		/* Modulo Camera */
 		if (cameraFinished == 1) {
@@ -145,43 +150,63 @@ int main(void)
 
 			/* Modulo servo Motor */
 			/* Tempo usando atualmente 18400--18700--19000 */
-			for (contIni = 0, contFin = 91; contIni <= 45;
-					contIni++, contFin--) {
-				if ((linha[contIni] == 0) && (linha[contIni + 1] == 0)
-						&& (linha[contIni + 2] == 0)) {
-					detectLine = contIni + 1;
-					break;
-				}
-				if ((linha[contFin] == 0) && (linha[contFin + 1] == 0)
-						&& (linha[contFin + 2] == 0)) {
-					detectLine = contFin - 1;
-					break;
-				}
-				if (contIni == 45) {
-					LED1_PutVal(1);
-					DetectCurve1_Enable();
-				}
+			/*for (contIni = 0, contFin = 91; contIni <= 45;
+			 contIni++, contFin--) {
+			 if ((linha[contIni] == 0) && (linha[contIni + 1] == 0)
+			 && (linha[contIni + 2] == 0)) {
+			 detectLine = contIni + 1;
+			 break;
+			 }
+			 if ((linha[contFin] == 0) && (linha[contFin + 1] == 0)
+			 && (linha[contFin + 2] == 0)) {
+			 detectLine = contFin - 1;
+			 break;
+			 }
+			 if (contIni == 45) {
+			 LED1_PutVal(1);
+			 DetectCurve1_Enable();
+			 }
 
+			 }*/
+			for (contIni = 0; contIni <= 92; contIni++) {
+				if (linha[contIni] == 0) {
+					//findLine = 1;
+					widLine++;
+				} else {
+					if (widLine >= 5 && widLine <= 8) {
+						numLine++;
+						if (widLine > 5)
+							detectLine = contIni - 4;
+						else
+							detectLine = contIni - 3;
+					}
+					//if(findLine == 1) findLine = 0;
+					widLine = 0;
+				}
 			}
 			/* Modulo Controle */
-			if (detectLine < 10) {
-				Servo1_SetDutyUS(19000);
-				TracaoA1PWM_SetDutyUS(TracaoCurveMaior);
-				TracaoB1PWM_SetDutyUS(TracaoCurveMenor);
-				//LED1_PutVal(1);
-			} else if (detectLine > 81) {
-				Servo1_SetDutyUS(18400);
-				TracaoA1PWM_SetDutyUS(TracaoCurveMenor);
-				TracaoB1PWM_SetDutyUS(TracaoCurveMaior);
-				//LED2_PutVal(1);
-			} else {
-				//LED1_PutVal(0);
-				//LED2_PutVal(0);
-				Servo1_SetDutyUS(
-						((double) 6.6666 * (90 - (detectLine))) + 18400);
-				TracaoA1PWM_SetDutyUS(TracaoReta);
-				TracaoB1PWM_SetDutyUS(TracaoReta);
+
+			if (numLine == 1) {
+				if (detectLine < 10) {
+					Servo1_SetDutyUS(19000);
+					TracaoA1PWM_SetDutyUS(TracaoCurveMaior);
+					TracaoB1PWM_SetDutyUS(TracaoCurveMenor);
+					//LED1_PutVal(1);
+				} else if (detectLine > 81) {
+					Servo1_SetDutyUS(18400);
+					TracaoA1PWM_SetDutyUS(TracaoCurveMenor);
+					TracaoB1PWM_SetDutyUS(TracaoCurveMaior);
+					//LED2_PutVal(1);
+				} else {
+					//LED1_PutVal(0);
+					//LED2_PutVal(0);
+					Servo1_SetDutyUS(
+							((double) 6.6666 * (90 - (detectLine))) + 18400);
+					TracaoA1PWM_SetDutyUS(TracaoReta);
+					TracaoB1PWM_SetDutyUS(TracaoReta);
+				}
 			}
+			numLine = 0;
 
 			maiorAmostra = 0;
 			menorAmostra = 65535;
@@ -191,40 +216,28 @@ int main(void)
 		}
 		/* Modulo Alteracao de Controle */
 		if (SW1_GetVal() == 1) {
-			/* Velocidade de Maxima Max */
-			TracaoReta = 8500;
-			TracaoCurveMaior = 10;
-			TracaoCurveMenor = 17000;
+			/* Velocidade +10% */
+			TracaoReta = 600;
+			TracaoCurveMaior = 150;
+			TracaoCurveMenor = 950;
 			divisao = 100;
 			limiador = 40;
-			/*
-			TracaoReta = 9000;
-			TracaoCurveMaior = 10;
-			TracaoCurveMenor = 18000;
-			divisao = 100;
-			limiador = 40;*/
 
-		} else if (SW1_GetVal() == 1) {
-			/* Velocidade de Maxima BOM */
-			TracaoReta = 10000;
-			TracaoCurveMaior = 500;
-			TracaoCurveMenor = 19900;
+		} else if (SW2_GetVal() == 1) {
+			/* Velocidade +5% */
+			TracaoReta = 620;
+			TracaoCurveMaior = 150;
+			TracaoCurveMenor = 950;
 			divisao = 100;
 			limiador = 40;
 
 		} else if (SW3_GetVal() == 1) {
-			/* Velocidade de Seguranca 2 */
-			TracaoReta = 12000;
-			TracaoCurveMaior = 500;
-			TracaoCurveMenor = 19900;
-			divisao = 100;
-			limiador = 40;
 
 		} else if (SW4_GetVal() == 1) {
 			/* Velocidade de segurança */
-			TracaoReta = 10000;
-			TracaoCurveMaior = 7000;
-			TracaoCurveMenor = 19000;
+			TracaoReta = 650;
+			TracaoCurveMaior = 250;
+			TracaoCurveMenor = 950;
 			divisao = 100;
 			limiador = 40;
 		}
