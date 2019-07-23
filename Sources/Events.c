@@ -41,16 +41,10 @@ extern "C" {
 extern byte cameraClock;
 extern byte cameraCont;
 extern byte cameraFinished;
-extern unsigned long linhaBruta[128];
-extern unsigned long maiorAmostra;
-extern unsigned long menorAmostra;
-unsigned long amostra;
-
-/* Modulo Controle */
-extern short velocCurve;
-extern short curve;
-extern short detectLine;
-short ladoCurve = 1;
+extern unsigned short int linhaBruta[100];
+extern uint8 maiorAmostra;
+extern uint8 menorAmostra;
+uint8 amostra;
 
 /*
  ** ===================================================================
@@ -85,15 +79,12 @@ void Cpu_OnNMIINT(void) {
  */
 void Analog1_OnEnd(void) {
 	/* Write your code here ... */
-
-	/* Modulo Camera */
-	if (cameraCont >= 0 && cameraCont <= 128) {
-		Analog1_GetValue(&amostra);
-		//Analog1_GetChanValue(0,&amostra);
-		linhaBruta[cameraCont] = amostra;
-		if (amostra > maiorAmostra && amostra != 0)
+	Analog1_GetValue8(&amostra);
+	if (cameraCont >= 14 && cameraCont <= 113) {
+		linhaBruta[cameraCont-14] = amostra;
+		if (amostra > maiorAmostra) //&& amostra != 0
 			maiorAmostra = amostra;
-		if (amostra < menorAmostra && amostra != 0)
+		if (amostra < menorAmostra) //&& amostra != 0
 			menorAmostra = amostra;
 	}
 }
@@ -132,8 +123,6 @@ void Analog1_OnCalibrationEnd(void) {
  */
 void CameraTimer1_OnInterrupt(void) {
 	/* Write your code here ... */
-
-	/* Modulo Camera */
 	if (cameraCont <= 128) {
 		if (cameraClock == 1) {
 			if (cameraCont <= 1) {
