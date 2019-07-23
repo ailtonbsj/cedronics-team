@@ -78,43 +78,42 @@
 /* User includes (#include below this line is not maintained by Processor Expert) */
 #include <stdlib.h>
 
-//## MINHAS DEFINICOES
-#define ALTURA_BORDAS 4500
-#define LARGURA_TRACK 30
-
-#define CENTRO_SERVO 18720 //18720
-#define LIDERDADE_SERVO 300
-#define ESQUERDA_SERVO (CENTRO_SERVO-LIDERDADE_SERVO)
-#define DIREITO_SERVO (CENTRO_SERVO+LIDERDADE_SERVO)
-
 //## VARIAVEIS
-
-unsigned long linha[118];
+unsigned long linha[100];
 unsigned long maiorAmostra = 0;
-unsigned long menorAmostra = 65535;
-
-/* Modulo Camera */
+unsigned long menorAmostra = 4294967295;
+unsigned long maiAmostra = 0;
+unsigned long menAmostra = 4294967295;
 byte cameraClock = 0;
 byte cameraCont = 0;
-byte cameraFinished = 0; //flag
+byte cameraFinished = 0;
 unsigned long linhaBruta[128];
 
-/* Modulo Servo */
-unsigned long tempoDuty = 18700;
-short detectLine = 0;
-short numLine = 0; //Quatidade de linha encontradas
-short widLine = 0; //Tamanho da linha
+#define CENTRO_SERVO 18720
+#define LIDERDADE_SERVO 270
+#define ESQUERDA_SERVO (CENTRO_SERVO-LIDERDADE_SERVO)
+#define DIREITO_SERVO (CENTRO_SERVO+LIDERDADE_SERVO)
+#define TRACAO 650
+#define ULTIMA_BORDA 4500
 
-/* Modulo Controle */
-int TracaoCurveMenor = 12000;
-int TracaoCurveMaior = 12000;
-int TracaoReta = 12000;
-short divisao = 4;
-short limiador = 2;
-long cortador = 0;
-//short shutdown = 0;
-//short finishLine = 0;
-//short contFinishLine = 0;
+int largura[3];
+int contLarg = 0;
+int contPixel = 0;
+
+int contIni = 0;
+int contFin = 0;
+int cortador = 0;
+
+int restoCont = 0;
+int flagI = 0;
+int flagF = 0;
+int posL = 0;
+int posR = 0;
+int esquerdoDireitoFlag = 0;
+int esquerdoDireitoFlagAnterior = 0;
+int posicaoCarro = 0;
+int giroServo = 0;
+int velocidade = 0;
 
 /*lint -save  -e970 Disable MISRA rule (6.3) checking. */
 int main(void)
@@ -130,52 +129,80 @@ int main(void)
 	/* Write your code here */
 	/* For example: for(;;) { } */
 
-	//##INICIALIZAR
-	Analog1_Start();
+	if (SW1_GetVal()) {
+		velocidade = velocidade | 0b00000001;
+	}
+	if (SW2_GetVal()) {
+		velocidade = velocidade | 0b00000010;
+	}
+	if (SW3_GetVal()) {
+		velocidade = velocidade | 0b00000100;
+	}
+	if (SW4_GetVal()) {
+		velocidade = velocidade | 0b00001000;
+	}
+	velocidade = velocidade * 100;
 
+	Analog1_Start();
 	TracaoEnable_PutVal(1);
-	TracaoA1PWM_SetDutyUS(800);
-	TracaoB1PWM_SetDutyUS(800);
+	TracaoA1PWM_SetDutyUS(velocidade);
+	TracaoB1PWM_SetDutyUS(velocidade);
 	TracaoA2_PutVal(0);
 	TracaoB2_PutVal(0);
 
-	//## LOOP
 	while (TRUE) {
-		//## VARIAVEIS LOCAIS
-		int contIni = 0;
-		int cortador = 0;
-		int contPixel = 0;
-		int esquerdoDireitoFlag = 0;
-		int contFin = 0;
-		int restoCont = 0;
 
 		//## LEITURA CAMERA DESATIVADA
 		if (cameraFinished == 1) {
 			cameraFinished = 0;
-			maiorAmostra = 0;
-			menorAmostra = 65535;
-
-			//## PROCESSAMENTO ...
-			for (contIni = 6; contIni <= 123; contIni++) {
-				linha[contIni - 6] = abs(
+			/* processing dados camera BEGIN */
+			maiAmostra = 0;
+			menAmostra = 4294967295;
+			for (contIni = 14; contIni <= 113; contIni++) {
+				linha[contIni - 14] = abs(
 						(signed long) linhaBruta[contIni + 1]
 								- linhaBruta[contIni]);
-				if (linha[contIni - 6] > maiorAmostra) {
-					maiorAmostra = linha[contIni - 6];
+				if (linha[contIni - 14] > maiAmostra) {
+					maiAmostra = linha[contIni - 14];
 				}
-				if (linha[contIni - 6] < menorAmostra) {
-					menorAmostra = linha[contIni - 6];
+				if (linha[contIni - 14] < menAmostra) {
+					menAmostra = linha[contIni - 14];
 				}
 			}
-			linha[0] = 0;
-			linha[1] = ALTURA_BORDAS;
-			linha[116] = ALTURA_BORDAS;
-			linha[117] = 0;
-
-			cortador = (maiorAmostra - menorAmostra) / 2;
+			cortador = (maiAmostra + menAmostra) / 2;
+			//linha[0] = 0;
+			//linha[1] = ULTIMA_BORDA;
+			//linha[116] = ULTIMA_BORDA;
+			//linha[117] = 0;
+			/* processing dados camera END */
+			/* detecção largura BEGIN */
+			if (contLarg < 13) {
+				if (contLarg >= 10) {
+					for (contIni = 49, contFin = 50; contFin <= 99;
+							contIni--, contFin++) {
+						if (linha[contIni] > cortador && flagI == 0) {
+							posL = contIni;
+							flagI = 1;
+						}
+						if (linha[contFin] > cortador && flagF == 0) {
+							posR = contFin;
+							flagF = 1;
+						}
+					}
+					flagF = 0;
+					flagI = 0;
+					largura[contLarg - 10] = abs(posR - posL);
+				}
+				if (contLarg == 12) {
+					largura[0] = (largura[0] + largura[1] + largura[2]) / 3;
+					largura[1] = largura[0] / 2;
+				}
+				contLarg++;
+			}
+			/* detecção largura END */
+			/*  BEGIN */
 			contPixel = 0;
-
-			for (contIni = 59, contFin = 59; contFin < 118;
+			for (contIni = 49, contFin = 50; contFin <= 99;
 					contIni--, contFin++) {
 				if (linha[contIni] > cortador) {
 					esquerdoDireitoFlag = 0;
@@ -187,29 +214,44 @@ int main(void)
 				}
 				contPixel++;
 			}
-
-			restoCont = abs(contPixel - LARGURA_TRACK);
-
-			
-
-			if (restoCont < 2) {
-				restoCont = (((float) LIDERDADE_SERVO / LARGURA_TRACK) * restoCont);
-				LED1_PutVal(1);
-				LED2_PutVal(1);
-				LED3_PutVal(1);
-				LED4_PutVal(1);
+			posicaoCarro = abs(largura[1] - contPixel);
+			if (cortador > 1000) {
+				if (posicaoCarro < 10) {
+					giroServo = ((float) LIDERDADE_SERVO / largura[1])
+							* posicaoCarro;
+					LED1_PutVal(0);
+					LED2_PutVal(0);
+					LED3_PutVal(0);
+					LED4_PutVal(0);
+					TracaoA1PWM_SetDutyUS(velocidade);
+					TracaoB1PWM_SetDutyUS(velocidade);
+				} else {
+					if (esquerdoDireitoFlagAnterior != esquerdoDireitoFlag) {
+						esquerdoDireitoFlag = esquerdoDireitoFlagAnterior;
+						
+						if (esquerdoDireitoFlag == 1) {
+							TracaoA1PWM_SetDutyUS(velocidade-150);
+							TracaoB1PWM_SetDutyUS(velocidade+150);
+						} else {
+							TracaoA1PWM_SetDutyUS(velocidade+150);
+							TracaoB1PWM_SetDutyUS(velocidade-150);
+						}
+						
+					}
+					giroServo = LIDERDADE_SERVO;
+					LED1_PutVal(1);
+					LED2_PutVal(1);
+					LED3_PutVal(1);
+					LED4_PutVal(1);
+				}
+				esquerdoDireitoFlagAnterior = esquerdoDireitoFlag;
 			} else {
-				restoCont = (((float) LIDERDADE_SERVO / LARGURA_TRACK) * restoCont);
-				LED1_PutVal(0);
-				LED2_PutVal(0);
-				LED3_PutVal(0);
-				LED4_PutVal(0);
-
+				giroServo = LIDERDADE_SERVO;
+				esquerdoDireitoFlag = esquerdoDireitoFlagAnterior;
 			}
-
 			//## CONTROLE E SEGURANÇA DO SERVO
 			if (esquerdoDireitoFlag == 0) {
-				restoCont = CENTRO_SERVO - restoCont;
+				restoCont = CENTRO_SERVO - giroServo;
 				if (restoCont > DIREITO_SERVO) {
 					restoCont = DIREITO_SERVO;
 				} else if (restoCont < ESQUERDA_SERVO) {
@@ -217,7 +259,7 @@ int main(void)
 				}
 				Servo1_SetDutyUS(restoCont);
 			} else {
-				restoCont = CENTRO_SERVO + restoCont;
+				restoCont = CENTRO_SERVO + giroServo;
 				if (restoCont > DIREITO_SERVO) {
 					restoCont = DIREITO_SERVO;
 				} else if (restoCont < ESQUERDA_SERVO) {
@@ -228,7 +270,7 @@ int main(void)
 
 			//## INICIALIZANDO LEITURA CAMERA
 			maiorAmostra = 0;
-			menorAmostra = 65535;
+			menorAmostra = 4294967295;
 			Analog1_Enable();
 			Analog1_Start();
 			CameraTimer1_Enable();
