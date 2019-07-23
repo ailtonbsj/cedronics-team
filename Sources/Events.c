@@ -87,7 +87,7 @@ void Analog1_OnEnd(void) {
 	/* Write your code here ... */
 
 	/* Modulo Camera */
-	if (cameraCont >= 0 && cameraClock <= 128) {
+	if (cameraCont >= 0 && cameraCont <= 128) {
 		Analog1_GetValue(&amostra);
 		//Analog1_GetChanValue(0,&amostra);
 		linhaBruta[cameraCont] = amostra;
@@ -171,11 +171,6 @@ void CameraTimer1_OnInterrupt(void) {
  **     Returns     : Nothing
  ** ===================================================================
  */
-void DetectCurve1_OnInterrupt(void) {
-	/* Write your code here ... */
-	LED1_PutVal(0);
-	DetectCurve1_Disable();
-}
 
 /* END Events */
 

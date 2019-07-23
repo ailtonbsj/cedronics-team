@@ -65,12 +65,6 @@
 #include "BitIoLdd12.h"
 #include "LED4.h"
 #include "BitIoLdd13.h"
-#include "LRED.h"
-#include "BitIoLdd14.h"
-#include "LBLUE.h"
-#include "BitIoLdd15.h"
-#include "LGREEN.h"
-#include "BitIoLdd16.h"
 #include "TracaoA2.h"
 #include "BitIoLdd3.h"
 #include "TracaoB1PWM.h"
@@ -82,19 +76,28 @@
 #include "IO_Map.h"
 
 /* User includes (#include below this line is not maintained by Processor Expert) */
+#include <stdlib.h>
 
-#define CENTRO 18700
-#define ESQUERDO 18400
-#define DIREITO 19000
+//## MINHAS DEFINICOES
+#define ALTURA_BORDAS 4500
+#define LARGURA_TRACK 30
+
+#define CENTRO_SERVO 18720 //18720
+#define LIDERDADE_SERVO 300
+#define ESQUERDA_SERVO (CENTRO_SERVO-LIDERDADE_SERVO)
+#define DIREITO_SERVO (CENTRO_SERVO+LIDERDADE_SERVO)
+
+//## VARIAVEIS
+
+unsigned long linha[118];
+unsigned long maiorAmostra = 0;
+unsigned long menorAmostra = 65535;
 
 /* Modulo Camera */
 byte cameraClock = 0;
 byte cameraCont = 0;
 byte cameraFinished = 0; //flag
 unsigned long linhaBruta[128];
-unsigned long linha[93];
-unsigned long maiorAmostra = 0;
-unsigned long menorAmostra = 65535;
 
 /* Modulo Servo */
 unsigned long tempoDuty = 18700;
@@ -119,6 +122,7 @@ int main(void)
 {
 	/* Write your local variable definition here */
 
+	//## VARIAVEIS
 	/*** Processor Expert internal initialization. DON'T REMOVE THIS CODE!!! ***/
 	PE_low_level_init();
 	/*** End of Processor Expert internal initialization.                    ***/
@@ -126,140 +130,110 @@ int main(void)
 	/* Write your code here */
 	/* For example: for(;;) { } */
 
-	/* Modulo de Acionamento de Componentes */
+	//##INICIALIZAR
 	Analog1_Start();
 
-	/* Modulo Tracao */
 	TracaoEnable_PutVal(1);
-	TracaoA1PWM_SetDutyUS(TracaoReta);
-	TracaoB1PWM_SetDutyUS(TracaoReta);
+	TracaoA1PWM_SetDutyUS(800);
+	TracaoB1PWM_SetDutyUS(800);
 	TracaoA2_PutVal(0);
 	TracaoB2_PutVal(0);
-	linha[92] = 1;
-	while (TRUE) {
-		LBLUE_PutVal(1);
-		/*int cont;*/
-		int contIni = 0;
 
-		/* Modulo Camera */
+	//## LOOP
+	while (TRUE) {
+		//## VARIAVEIS LOCAIS
+		int contIni = 0;
+		int cortador = 0;
+		int contPixel = 0;
+		int esquerdoDireitoFlag = 0;
+		int contFin = 0;
+		int restoCont = 0;
+
+		//## LEITURA CAMERA DESATIVADA
 		if (cameraFinished == 1) {
 			cameraFinished = 0;
+			maiorAmostra = 0;
+			menorAmostra = 65535;
 
-			cortador = ((maiorAmostra - menorAmostra) / divisao) * limiador
-					+ menorAmostra;
-			for (contIni = 18; contIni <= 109; contIni++) {
-				if (linhaBruta[contIni] <= cortador) {
-					linha[contIni - 18] = 0;
-				} else {
-					linha[contIni - 18] = 1;
+			//## PROCESSAMENTO ...
+			for (contIni = 6; contIni <= 123; contIni++) {
+				linha[contIni - 6] = abs(
+						(signed long) linhaBruta[contIni + 1]
+								- linhaBruta[contIni]);
+				if (linha[contIni - 6] > maiorAmostra) {
+					maiorAmostra = linha[contIni - 6];
+				}
+				if (linha[contIni - 6] < menorAmostra) {
+					menorAmostra = linha[contIni - 6];
 				}
 			}
+			linha[0] = 0;
+			linha[1] = ALTURA_BORDAS;
+			linha[116] = ALTURA_BORDAS;
+			linha[117] = 0;
 
-			/* Modulo servo Motor */
-			for (contIni = 0; contIni <= 92; contIni++) {
-				if (linha[contIni] == 0) {
-					//findLine = 1;
-					widLine++;
-				} else {
-					if (widLine >= 5 && widLine <= 8) { //if (widLine >= 5 && widLine <= 8) {
-						numLine++;
-						if (widLine > 5)
-							detectLine = contIni - 4;
-						else
-							detectLine = contIni - 3;
-					}
-					//if(findLine == 1) findLine = 0;
-					widLine = 0;
+			cortador = (maiorAmostra - menorAmostra) / 2;
+			contPixel = 0;
+
+			for (contIni = 59, contFin = 59; contFin < 118;
+					contIni--, contFin++) {
+				if (linha[contIni] > cortador) {
+					esquerdoDireitoFlag = 0;
+					break;
 				}
+				if (linha[contFin] > cortador) {
+					esquerdoDireitoFlag = 1;
+					break;
+				}
+				contPixel++;
 			}
 
-			/* Modulo Controle */
-			/*if (numLine == 3 && finishLine == 1) {
-			 if (contFinishLine == 1)
-			 TracaoEnable_PutVal(0);
-			 else
-			 contFinishLine++;
-			 }*/
-			if (numLine == 1) {
+			restoCont = abs(contPixel - LARGURA_TRACK);
 
-				//SERVO
-				if (detectLine < 6) { //10
-					Servo1_SetDutyUS(19000);
-				} else if (detectLine > 85) { //81
-					Servo1_SetDutyUS(18400);
-				} else {
-					Servo1_SetDutyUS(
-							((double) 6.6666 * (90 - (detectLine))) + 18400);
-				}
+			
 
-				//TRACAO
-				/*if (shutdown == 1) {
-				 TracaoA1PWM_SetDutyUS(990);
-				 TracaoB1PWM_SetDutyUS(990);
-				 } else*/if (detectLine < 29) { //30
-					TracaoA1PWM_SetDutyUS(TracaoCurveMaior);
-					TracaoB1PWM_SetDutyUS(TracaoCurveMenor);
-					LED1_PutVal(1);
-					LED2_PutVal(1);
-					LED3_PutVal(1);
-					LED4_PutVal(1);
-				} else if (detectLine > 62) { //61
-					TracaoA1PWM_SetDutyUS(TracaoCurveMenor);
-					TracaoB1PWM_SetDutyUS(TracaoCurveMaior);
-					LED1_PutVal(1);
-					LED2_PutVal(1);
-					LED3_PutVal(1);
-					LED4_PutVal(1);
-				} else {
-					TracaoA1PWM_SetDutyUS(TracaoReta);
-					TracaoB1PWM_SetDutyUS(TracaoReta);
-				}
+			if (restoCont < 2) {
+				restoCont = (((float) LIDERDADE_SERVO / LARGURA_TRACK) * restoCont);
+				LED1_PutVal(1);
+				LED2_PutVal(1);
+				LED3_PutVal(1);
+				LED4_PutVal(1);
+			} else {
+				restoCont = (((float) LIDERDADE_SERVO / LARGURA_TRACK) * restoCont);
+				LED1_PutVal(0);
+				LED2_PutVal(0);
+				LED3_PutVal(0);
+				LED4_PutVal(0);
+
 			}
-			numLine = 0;
 
+			//## CONTROLE E SEGURANÇA DO SERVO
+			if (esquerdoDireitoFlag == 0) {
+				restoCont = CENTRO_SERVO - restoCont;
+				if (restoCont > DIREITO_SERVO) {
+					restoCont = DIREITO_SERVO;
+				} else if (restoCont < ESQUERDA_SERVO) {
+					restoCont = ESQUERDA_SERVO;
+				}
+				Servo1_SetDutyUS(restoCont);
+			} else {
+				restoCont = CENTRO_SERVO + restoCont;
+				if (restoCont > DIREITO_SERVO) {
+					restoCont = DIREITO_SERVO;
+				} else if (restoCont < ESQUERDA_SERVO) {
+					restoCont = ESQUERDA_SERVO;
+				}
+				Servo1_SetDutyUS(restoCont);
+			}
+
+			//## INICIALIZANDO LEITURA CAMERA
 			maiorAmostra = 0;
 			menorAmostra = 65535;
 			Analog1_Enable();
 			Analog1_Start();
 			CameraTimer1_Enable();
 		}
-		/* Modulo Alteracao de Controle */
-		if (SW1_GetVal() == 1) {
-			/* Maximmum Speed */
-			TracaoReta = 600;
-			TracaoCurveMaior = 2;
-			TracaoCurveMenor = 950;
-			divisao = 100;
-			limiador = 40;
-			//finishLine = 0;
-
-		} else if (SW2_GetVal() == 1) {
-			TracaoReta = 500;
-			TracaoCurveMaior = 90;
-			TracaoCurveMenor = 800;
-			divisao = 100;
-			limiador = 40;
-			//finishLine = 0;
-
-		} else if (SW3_GetVal() == 1) {
-			/* MAX */
-			TracaoReta = 400;
-			TracaoCurveMaior = 90;
-			TracaoCurveMenor = 700;
-			divisao = 100;
-			limiador = 40;
-			//finishLine = 0;
-
-		} else if (SW4_GetVal() == 1) {
-			/* Security Speed */
-			TracaoReta = 510;
-			TracaoCurveMaior = 2;
-			TracaoCurveMenor = 950;
-			divisao = 100;
-			limiador = 40;
-			//finishLine = 0;
-		}
-
+		//## LEITURA CAMERA ATIVADA
 	}
 
 	/*** Don't write any code pass this line, or it will be deleted during code generation. ***/
