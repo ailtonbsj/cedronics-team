@@ -6,3 +6,5 @@
 - Freedom Board (Freescale Processor Kinetis KL25Z)
 - FRDM-TFC Board
 - Linescan Sensor
+
+![Kinetis KL2 MCU Family](kinetis-kl2-mcu-family.jpg)
