@@ -7,4 +7,12 @@
 - FRDM-TFC Board
 - Linescan Sensor
 
-![Kinetis KL2 MCU Family](kinetis-kl2-mcu-family.jpg)
+![Smartcar](.github/smartcar.jpg)
+
+![Block Diagram](.github/block-diagram.png)
+
+![FRDM-TFC](.github/frdm-tfc.png)
+
+![FRDM-KL25Z](.github/frdm-kl25z.png)
+
+![Kinetis KL2 MCU Family](.github/kinetis-kl2-mcu-family.jpg)
